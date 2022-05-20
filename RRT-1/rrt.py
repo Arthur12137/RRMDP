@@ -57,7 +57,11 @@ def check_collision(x1,y1,x2,y2):
         if collision(x,y,end[0],end[1]):
             directCon = False
         else:
-            directCon=True
+            d, _ = dist_and_angle(x1, y1, x2, y2)
+            if d < 5:
+                directCon = True 
+            else:
+                directCon = False
 
         # check connection between two nodes
         if collision(x,y,x2,y2):
@@ -105,7 +109,7 @@ def RRT(img, img2, start, end, stepSize):
 
     i=1
     pathFound = False
-    while pathFound==False:
+    while not pathFound:
         nx,ny = rnd_point(h,l)
         print("Random points:",nx,ny)
 
