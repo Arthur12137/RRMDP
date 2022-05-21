@@ -1,10 +1,8 @@
+
 """
-
 Path planning with Rapidly-Exploring Random Trees (RRT)
-
 author: Aakash(@nimrobotics)
 web: nimrobotics.github.io
-
 """
 
 import cv2
@@ -25,20 +23,15 @@ class Nodes:
 # check collision
 def collision(x1,y1,x2,y2):
     color=[]
-
     x = list(np.arange(x1,x2,(x2-x1)/100))
-
+    y = list(((y2-y1)/(x2-x1))*(x-x1) + y1)
     print("Type of x: ", type(x))
     print("Type of x1: ", type(x1))
     print("Type of x-x1:", type(x-x1))
     print("Type of y1: ", type(y1))
-    y = list(((y2-y1)/(x2-x1))*(x-x1) + y1)
-
-
-    # y = list(((y2-y1)/(x2-x1))*([xx-x1 for xx in x]) + y1)
     # print("collision",x,y)
     for i in range(len(x)):
-        print(int(x[i]),int(y[i]))
+        # print(int(x[i]),int(y[i]))
         color.append(img[int(y[i]),int(x[i])])
     if (0 in color):
         return True #collision
@@ -46,11 +39,10 @@ def collision(x1,y1,x2,y2):
         return False #no-collision
 
 # check the  collision with obstacle and trim
-# def check_collision(x1,y1,x2,y2):
-def check_collision(tx, ty, nearest_x, nearest_y):
-    # _,theta = dist_and_angle(x2,y2,x1,y1)
-    # x=x2 + stepSize*np.cos(theta)
-    # y=y2 + stepSize*np.sin(theta)
+def check_collision(x1,y1,x2,y2):
+    _,theta = dist_and_angle(x2,y2,x1,y1)
+    x=x2 + stepSize*np.cos(theta)
+    y=y2 + stepSize*np.sin(theta)
     # print(x2,y2,x1,y1)
     # print("theta",theta)
     # print("check_collision",x,y)
@@ -58,33 +50,28 @@ def check_collision(tx, ty, nearest_x, nearest_y):
     # TODO: trim the branch if its going out of image area
     # print("Image shape",img.shape)
     hy,hx=img.shape
-    # if y<0 or y>hy or x<0 or x>hx:
-    if ty < 0 or ty > hy or tx < 0 or tx > hx:
+    if y<0 or y>hy or x<0 or x>hx:
         print("Point out of image bound")
         directCon = False
         nodeCon = False
     else:
         # check direct connection
-        # if collision(x,y,end[0],end[1]):
-        if collision(tx, ty, end[0], end[1]):
+        if collision(x,y,end[0],end[1]):
             directCon = False
         else:
-            # d, _ = dist_and_angle(x1, y1, x2, y2)
-            d, _ = dist_and_angle(tx, ty, nearest_x, nearest_y)
+            d, _ = dist_and_angle(x1, y1, x2, y2)
             if d < 5:
                 directCon = True 
             else:
                 directCon = False
 
         # check connection between two nodes
-        # if collision(x,y,x2,y2):
-        if collision(tx, ty, nearest_x, nearest_y):
+        if collision(x,y,x2,y2):
             nodeCon = False
         else:
             nodeCon = True
 
-    # return(x,y,directCon,nodeCon)
-    return (directCon, nodeCon)
+    return(x,y,directCon,nodeCon)
 
 # return dist and angle b/w new point and nearest node
 def dist_and_angle(x1,y1,x2,y2):
@@ -106,36 +93,11 @@ def rnd_point(h,l):
     new_x = random.randint(0, l)
     return (new_x,new_y)
 
-def force_generation():
-    directions = [(0, 1), (0, -1), (1, 0), (-1, 0),
-                  (1, 1), (1, -1), (-1, 1), (-1, -1)]
-    x_magnitude = random.randint(1, 10)
-    y_magnitude = random.randint(1, 10)
-    magnitudes = (x_magnitude, y_magnitude)
-
-    direct_idx = random.randint(0, 7)
-    direction_sampled = directions[direct_idx]
-    return direction_sampled, magnitudes
-
-def steer_towards(nearest_x, nearest_y, nx, ny, step_size):
-    # dis, angle = dist_and_angle(nx, ny, nearest_x, nearest_y)
-    # direction_sampled, magnitudes = force_generation()
-    # x_dir, y_dir = direction_sampled
-
-    dis, theta = dist_and_angle(nearest_x, nearest_y, nx, ny)
-    if dis <= step_size:
-        return nx, ny
-    else:
-        tx = nearest_x + step_size * math.cos(theta)
-        ty = nearest_y + step_size * math.sin(theta)
-        return tx, ty
-
 
 def RRT(img, img2, start, end, stepSize):
     h,l= img.shape # dim of the loaded image
     # print(img.shape) # (384, 683)
     # print(h,l)
-    max_len = 50
 
     # insert the starting point in the node class
     # node_list = [0] # list to store all the node points         
@@ -149,35 +111,17 @@ def RRT(img, img2, start, end, stepSize):
 
     i=1
     pathFound = False
-
-
     while not pathFound:
         nx,ny = rnd_point(h,l)
         print("Random points:",nx,ny)
 
-        # Uncertainty here
-        # direction_sampled, magnitudes = force_generation()
-        # x_force, y_force = direction_sampled
-        # x_magnitude, y_magnitude = magnitudes
-        # x_diff, y_diff = x_force * x_magnitude, y_force * y_magnitude
-        # nx += x_force
-        # ny += y_force
-
         nearest_ind = nearest_node(nx,ny)
         nearest_x = node_list[nearest_ind].x
         nearest_y = node_list[nearest_ind].y
-        print("Nearest node coordinates:",nearest_x,nearest_y)
-
-        # Here we do the steering
-        # tx, ty = steer_towards(nx, ny, nearest_x, nearest_y, stepSize)
-        tx, ty = steer_towards(nearest_x, nearest_y, nx, ny, stepSize)
-        print("type of tx: ", type(tx))
-        print("type of ty: ", type(ty))
-
+        # print("Nearest node coordinates:",nearest_x,nearest_y)
 
         #check direct connection
-        # tx,ty,directCon,nodeCon = check_collision(nx,ny,nearest_x,nearest_y)
-        directCon, nodeCon = check_collision(np.float64(tx), np.float64(ty), nearest_x, nearest_y)
+        tx,ty,directCon,nodeCon = check_collision(nx,ny,nearest_x,nearest_y)
         print("Check collision:",tx,ty,directCon,nodeCon)
 
         if directCon and nodeCon:
