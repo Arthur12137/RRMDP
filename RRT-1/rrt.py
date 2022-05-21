@@ -26,24 +26,32 @@ class Nodes:
 def collision(x1,y1,x2,y2):
     color=[]
 
-    x = list(np.arange(x1,x2,(x2-x1)/100))
+    # x = list(np.arange(x1,x2,(x2-x1)/100))
 
-    print("Type of x: ", type(x))
-    print("Type of x1: ", type(x1))
-    print("Type of x-x1:", type(x-x1))
-    print("Type of y1: ", type(y1))
-    y = list(((y2-y1)/(x2-x1))*(x-x1) + y1)
+    # print("Type of x: ", type(x))
+    # print("Type of x1: ", type(x1))
+    # print("Type of x-x1:", type(x-x1))
+    # print("Type of y1: ", type(y1))
+    try:
+        x = list(np.arange(x1,x2,(x2-x1)/100))
+
+        y = list(((y2-y1)/(x2-x1))*(x-x1) + y1)
 
 
-    # y = list(((y2-y1)/(x2-x1))*([xx-x1 for xx in x]) + y1)
-    # print("collision",x,y)
-    for i in range(len(x)):
-        print(int(x[i]),int(y[i]))
-        color.append(img[int(y[i]),int(x[i])])
-    if (0 in color):
-        return True #collision
-    else:
-        return False #no-collision
+        # y = list(((y2-y1)/(x2-x1))*([xx-x1 for xx in x]) + y1)
+        # print("collision",x,y)
+        for i in range(len(x)):
+            # print(int(x[i]),int(y[i]))
+            color.append(img[int(y[i]),int(x[i])])
+        if (0 in color):
+            return True #collision
+        else:
+            return False #no-collision
+    except ValueError:
+        print("Value error thrown...")
+        print("When it is thrown, the value of x1: ", x1)
+        print("When it is thrown, the value of x2: ", x2)
+        print("When it is thrown: the value of (x2-x1)/100: ", (x2-x1)/100)
 
 # check the  collision with obstacle and trim
 # def check_collision(x1,y1,x2,y2):
@@ -59,7 +67,7 @@ def check_collision(tx, ty, nearest_x, nearest_y):
     # print("Image shape",img.shape)
     hy,hx=img.shape
     # if y<0 or y>hy or x<0 or x>hx:
-    if ty < 0 or ty > hy or tx < 0 or tx > hx:
+    if ty < 0 or ty >= hy or tx < 0 or tx >= hx:
         print("Point out of image bound")
         directCon = False
         nodeCon = False
@@ -118,17 +126,25 @@ def force_generation():
     return direction_sampled, magnitudes
 
 def steer_towards(nearest_x, nearest_y, nx, ny, step_size):
-    # dis, angle = dist_and_angle(nx, ny, nearest_x, nearest_y)
-    # direction_sampled, magnitudes = force_generation()
-    # x_dir, y_dir = direction_sampled
+    dis, angle = dist_and_angle(nx, ny, nearest_x, nearest_y)
+    direction_sampled, magnitudes = force_generation()
+    x_dir, y_dir = direction_sampled
+    x_magnitude, y_magnitude = magnitudes
 
     dis, theta = dist_and_angle(nearest_x, nearest_y, nx, ny)
     if dis <= step_size:
-        return nx, ny
+        tx = nx
+        ty = ny
     else:
         tx = nearest_x + step_size * math.cos(theta)
         ty = nearest_y + step_size * math.sin(theta)
-        return tx, ty
+    print("tx, ty before applying the force: ", tx, ty)
+    tx += x_dir * x_magnitude
+    ty += y_dir * y_magnitude
+    print("x_dir, y_dir: ", x_dir, y_dir)
+    print("x_magnitude, y_magnitude: ", x_magnitude, y_magnitude)
+    print("tx, ty after applying the force: ", tx, ty)
+    return tx, ty
 
 
 def RRT(img, img2, start, end, stepSize):
