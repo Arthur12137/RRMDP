@@ -206,18 +206,6 @@ if __name__ == '__main__':
     node_list = [0] # list to store all the node points
 
     coordinates=[]
-    if args.selectPoint:
-        print("Select start and end points by double clicking, press 'escape' to exit")
-        cv2.namedWindow('image')
-        cv2.setMouseCallback('image',draw_circle)
-        while(1):
-            cv2.imshow('image',img2)
-            k = cv2.waitKey(20) & 0xFF
-            if k == 27:
-                break
-        # print(coordinates)
-        start=(coordinates[0],coordinates[1])
-        end=(coordinates[2],coordinates[3])
 
     # run the RRT algorithm 
     RRT(img, img2, start, end, stepSize)
