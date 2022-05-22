@@ -8,4 +8,4 @@ class MarkovDecisionProcess:
 # States: a list of tuples, (-1, -1) for dead-end state
 # Actions: a tuple of two tuples, denoting moving from one state to another
 # transition: a dictionary of...
-#
+# Cost:
