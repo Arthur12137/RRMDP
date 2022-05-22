@@ -264,8 +264,8 @@ def RRG(img, img2, start, end, stepSize):
 
             # Again: doing the RRG extension
             # (The original code is really design in a weird way...)
-            nearest_node.parent_x.append(nearest_x)
-            nearest_node.parent_y.append(nearest_y)
+            nearest.parent_x.append(nearest_x)
+            nearest.parent_y.append(nearest_y)
 
             sample_neighbours_and_add_edge(node_to_be_added, neighbour_radius)
 
