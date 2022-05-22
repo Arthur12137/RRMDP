@@ -41,7 +41,6 @@ def collision(x1,y1,x2,y2):
 
         y = list(((y2-y1)/(x2-x1))*(x-x1) + y1)
 
-
         # y = list(((y2-y1)/(x2-x1))*([xx-x1 for xx in x]) + y1)
         # print("collision",x,y)
         for i in range(len(x)):
