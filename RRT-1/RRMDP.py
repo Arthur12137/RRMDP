@@ -8,5 +8,4 @@ class MarkovDecisionProcess:
 # States: a list of tuples
 # Actions: a tuple of two tuples, denoting moving from one state to another
 # transition: a dictionary of...
-#   key: tuple indicating the xy coordinate
-#   values:
+#

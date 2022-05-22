@@ -59,12 +59,6 @@ def collision(x1,y1,x2,y2):
 # check the  collision with obstacle and trim
 # def check_collision(x1,y1,x2,y2):
 def check_collision(tx, ty, nearest_x, nearest_y):
-    # _,theta = dist_and_angle(x2,y2,x1,y1)
-    # x=x2 + stepSize*np.cos(theta)
-    # y=y2 + stepSize*np.sin(theta)
-    # print(x2,y2,x1,y1)
-    # print("theta",theta)
-    # print("check_collision",x,y)
 
     # TODO: trim the branch if its going out of image area
     # print("Image shape",img.shape)
