@@ -5,7 +5,7 @@ Transitions = {}
 Reward = {}
 
 #gamma is the discount factor
-if len(sys.argv)>1:
+if len(sys.argv) > 1:
     gamma = float(sys.argv[1])
 else:
     gamma = 0.9
@@ -63,8 +63,10 @@ class MarkovDecisionProcess:
         """for a state and an action, return a list of (probability, result-state) pairs."""
         return self.transition[state][action]
 
+
 #Initialize the MarkovDecisionProcess object
 mdp = MarkovDecisionProcess(transition=Transitions, reward=Reward)
+
 
 def value_iteration():
     """
