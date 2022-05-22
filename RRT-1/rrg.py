@@ -162,7 +162,7 @@ def sample_neighbours_and_add_edge(x_new: Nodes, radius):
         temp_node = node_list[i]
         dist, _ = dist_and_angle(x_new.x, x_new.y, temp_node.x, temp_node.y)
         if dist <= radius and temp_node != x_new:
-            if not collision(x_new.x, x_new.y, temp_node.x, temp_node.y):
+            if not collision(np.float64(x_new.x), np.float64(x_new.y), temp_node.x, temp_node.y):
                 x_new.parent_x.append(temp_node.x)
                 x_new.parent_y.append(temp_node.y)
                 temp_node.parent_x.append(x_new.x)
@@ -236,10 +236,6 @@ def RRG(img, img2, start, end, stepSize):
             nearest.parent_y.append(ty)
 
             sample_neighbours_and_add_edge(node_to_be_added, neighbour_radius)
-            # node_list[i].parent_x = node_list[nearest_ind].parent_x.copy()
-            # node_list[i].parent_y = node_list[nearest_ind].parent_y.copy()
-            # node_list[i].parent_x.append(tx)
-            # node_list[i].parent_y.append(ty)
 
             cv2.circle(img2, (int(tx),int(ty)), 2,(0,0,255),thickness=3, lineType=8)
             cv2.line(img2, (int(tx),int(ty)), (int(node_list[nearest_ind].x),int(node_list[nearest_ind].y)), (0,255,0), thickness=1, lineType=8)
