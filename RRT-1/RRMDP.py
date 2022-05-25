@@ -47,6 +47,10 @@ def dist_and_angle(x1,y1,x2,y2):
     return dist, angle
 
 
+def distance(x1, y1, x2, y2):
+    return math.sqrt( ((x1-x2)**2)+((y1-y2)**2) )
+
+
 def calculate_mean(s):
     x_total = 0
     y_total = 0
@@ -72,20 +76,16 @@ class RRMDP:
         self.mdp = MarkovDecisionProcess()
         self.img = img
         self.img2 = img2
-        self.build_iters = 10000        # value N in the paper
+        self.build_iters = 300        # value N in the paper
         self.extend_iters = 20          # value k in the paper
         self.step_size = step_size
         self.neighbour_radiance = 20    # Used for the near function
+        self.num_clusters = 4
+        self.clustering_iters = 15
 
     def collision(self, x1, y1, x2, y2):
         color = []
 
-        # x = list(np.arange(x1,x2,(x2-x1)/100))
-
-        # print("Type of x: ", type(x))
-        # print("Type of x1: ", type(x1))
-        # print("Type of x-x1:", type(x-x1))
-        # print("Type of y1: ", type(y1))
         try:
             x = list(np.arange(x1, x2, (x2 - x1) / 100))
 
@@ -147,7 +147,8 @@ class RRMDP:
             temp_dist.append(dist)
         return temp_dist.index(min(temp_dist))
 
-    def rnd_point(self,h, l):
+    def rnd_point(self):
+        h, l = self.img.shape
         new_y = random.randint(0, h)
         new_x = random.randint(0, l)
         return new_x, new_y
@@ -164,7 +165,6 @@ class RRMDP:
         return direction_sampled, magnitudes
 
     def steer_towards(self, nearest_x, nearest_y, nx, ny, step_size):
-        # dis, angle = dist_and_angle(nx, ny, nearest_x, nearest_y)
         # TODO: need to change the generation of the force
         direction_sampled, magnitudes = self.force_generation()
         x_dir, y_dir = direction_sampled
@@ -201,7 +201,7 @@ class RRMDP:
         self.mdp.states.append((-1, -1))        # Dead state
         self.mdp.states.append((x_init, y_init))
         for _ in range(self.build_iters):
-            x_rand, y_rand = self.rnd_point(self.img.shape[0], self.img.shape[1])
+            x_rand, y_rand = self.rnd_point()
             self.extend_mdp(x_rand, y_rand, self.step_size)
 
     def extend_mdp(self, x_rand, y_rand, step_size):
@@ -232,17 +232,9 @@ class RRMDP:
             particle_set_new = set()
             for particles in state_particle_sets.values():
                 particle_set_new.union(particles)
-            
 
+            clusters = self.k_means(particle_set_new)
 
+    def k_means(self, particle_set):
+        means = [self.rnd_point() for _ in range(self.num_clusters)]
 
-# return the neaerst node index
-# def nearest_node(x,y):
-#     temp_dist=[]
-#     for i in range(len(node_list)):
-#         dist,_ = dist_and_angle(x,y,node_list[i].x,node_list[i].y)
-#         temp_dist.append(dist)
-#     return temp_dist.index(min(temp_dist))
-
-
-# generate a random point in the image space
