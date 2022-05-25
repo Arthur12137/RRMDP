@@ -71,6 +71,29 @@ class Nodes:
         self.parent_y = []
 
 
+def force_generation():
+    directions = [(0, 1), (0, -1), (1, 0), (-1, 0),
+                  (1, 1), (1, -1), (-1, 1), (-1, -1)]
+    x_magnitude = random.randint(1, 10)
+    y_magnitude = random.randint(1, 10)
+    magnitudes = (x_magnitude, y_magnitude)
+
+    direct_idx = random.randint(0, 7)
+    direction_sampled = directions[direct_idx]
+    return direction_sampled, magnitudes
+
+def nearest_mean(means, x, y):
+    temp_d_min = -1
+    closest_idx = -1
+    for idx in range(len(means)):
+        xm, ym = means[idx]
+        d = distance(x, y, xm, ym)
+        if temp_d_min == -1 or d < temp_d_min:
+            temp_d_min = d
+            closest_idx = idx
+    return closest_idx
+
+
 class RRMDP:
     def __init__(self, img, img2, step_size):
         self.mdp = MarkovDecisionProcess()
@@ -106,39 +129,6 @@ class RRMDP:
             print("When it is thrown, the value of x2: ", x2)
             print("When it is thrown: the value of (x2-x1)/100: ", (x2 - x1) / 100)
 
-    def check_collision(self, tx, ty, nearest_x, nearest_y, end):
-
-        # TODO: trim the branch if its going out of image area
-        # print("Image shape",img.shape)
-        hy, hx = self.img.shape
-        # if y<0 or y>hy or x<0 or x>hx:
-        if ty < 0 or ty >= hy or tx < 0 or tx >= hx:
-            print("Point out of image bound")
-            directCon = False
-            nodeCon = False
-        else:
-            # check direct connection
-            # if collision(x,y,end[0],end[1]):
-            if self.collision(tx, ty, end[0], end[1]):
-                directCon = False
-            else:
-                # d, _ = dist_and_angle(x1, y1, x2, y2)
-                d, _ = dist_and_angle(tx, ty, nearest_x, nearest_y)
-                if d < 5:
-                    directCon = True
-                else:
-                    directCon = False
-
-            # check connection between two nodes
-            # if collision(x,y,x2,y2):
-            if self.collision(tx, ty, nearest_x, nearest_y):
-                nodeCon = False
-            else:
-                nodeCon = True
-
-        # return(x,y,directCon,nodeCon)
-        return directCon, nodeCon
-
     def nearest_state(self, x, y):
         temp_dist = []
         states = self.mdp.states
@@ -153,20 +143,9 @@ class RRMDP:
         new_x = random.randint(0, l)
         return new_x, new_y
 
-    def force_generation(self):
-        directions = [(0, 1), (0, -1), (1, 0), (-1, 0),
-                      (1, 1), (1, -1), (-1, 1), (-1, -1)]
-        x_magnitude = random.randint(1, 10)
-        y_magnitude = random.randint(1, 10)
-        magnitudes = (x_magnitude, y_magnitude)
-
-        direct_idx = random.randint(0, 7)
-        direction_sampled = directions[direct_idx]
-        return direction_sampled, magnitudes
-
     def steer_towards(self, nearest_x, nearest_y, nx, ny, step_size):
         # TODO: need to change the generation of the force
-        direction_sampled, magnitudes = self.force_generation()
+        direction_sampled, magnitudes = force_generation()
         x_dir, y_dir = direction_sampled
         x_magnitude, y_magnitude = magnitudes
 
@@ -237,4 +216,17 @@ class RRMDP:
 
     def k_means(self, particle_set):
         means = [self.rnd_point() for _ in range(self.num_clusters)]
-
+        # clusters = [set() for _ in range(self.num_clusters)]
+        clusters = []
+        for _ in range(self.clustering_iters):
+            clusters = [set() for _ in range(self.num_clusters)]
+            for xp, yp in particle_set:
+                nearest_idx = nearest_mean(means, xp, yp)
+                # clusters = [set() for _ in range(self.num_clusters)]
+                clusters[nearest_idx].add((xp, yp))
+            # Update the means of each cluster
+            for i in range(len(clusters)):
+                cluster = clusters[i]
+                new_mean = calculate_mean(cluster)
+                means[i] = new_mean
+        return clusters
