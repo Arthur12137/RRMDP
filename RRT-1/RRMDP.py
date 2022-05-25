@@ -56,12 +56,13 @@ class Nodes:
 
 
 class RRMDP:
-    def __init__(self, img, img2):
+    def __init__(self, img, img2, step_size):
         self.mdp = MarkovDecisionProcess()
         self.img = img
         self.img2 = img2
         self.build_iters = 10000        # value N in the paper
         self.extend_iters = 20          # value k in the paper
+        self.step_size = step_size
 
     def collision(self, x1, y1, x2, y2):
         color = []
@@ -171,12 +172,13 @@ class RRMDP:
         return tx, ty
 
     def build_mdp(self, x_init, y_init):
-        self.mdp.states.append((-1, -1))
+        self.mdp.states.append((-1, -1))        # Dead state
         self.mdp.states.append((x_init, y_init))
+        for _ in range(self.build_iters):
+            self.extend_mdp(x_init, y_init, self.step_size)
 
 
-
-    def extend_mdp(self, start, end, step_size, x_rand):
+    def extend_mdp(self, x_init, y_init, step_size, x_rand, y_rand):
         # TODO: the main extension algorithm starts here
 # return the neaerst node index
 # def nearest_node(x,y):
