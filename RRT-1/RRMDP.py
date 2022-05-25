@@ -63,6 +63,7 @@ class RRMDP:
         self.build_iters = 10000        # value N in the paper
         self.extend_iters = 20          # value k in the paper
         self.step_size = step_size
+        self.neighbour_radiance = 20    # Used for the near function
 
     def collision(self, x1, y1, x2, y2):
         color = []
@@ -151,7 +152,8 @@ class RRMDP:
         return direction_sampled, magnitudes
 
     def steer_towards(self, nearest_x, nearest_y, nx, ny, step_size):
-        dis, angle = dist_and_angle(nx, ny, nearest_x, nearest_y)
+        # dis, angle = dist_and_angle(nx, ny, nearest_x, nearest_y)
+        # TODO: need to change the generation of the force
         direction_sampled, magnitudes = self.force_generation()
         x_dir, y_dir = direction_sampled
         x_magnitude, y_magnitude = magnitudes
@@ -171,6 +173,18 @@ class RRMDP:
         print("tx, ty after applying the force: ", tx, ty)
         return tx, ty
 
+    def sample_neighbours(self, x_n, y_n):
+        """
+        Returns all the neighbours of (x, y) within the radiance
+        self.neighbour_radiance.
+        """
+        rst = []
+        for x, y in self.mdp.states:
+            dist, _ = dist_and_angle(x, y, x_n, y_n)
+            if dist < self.neighbour_radiance:
+                rst.append((x, y))
+        return rst
+
     def build_mdp(self, x_init, y_init):
         self.mdp.states.append((-1, -1))        # Dead state
         self.mdp.states.append((x_init, y_init))
@@ -181,6 +195,19 @@ class RRMDP:
     def extend_mdp(self, x_rand, y_rand, step_size):
         # TODO: the main extension algorithm starts here
         x_nearest, y_nearest = self.nearest_state(x_rand, y_rand)
+        state_particle_sets = dict()
+        for x, y in self.mdp.states:
+            state_particle_sets[(x, y)] = set()
+        nearest_state_particles = state_particle_sets[(x_nearest, y_nearest)]
+        for _ in range(self.extend_iters):
+            tx, ty = self.steer_towards(x_nearest, y_nearest, x_rand, y_rand, step_size)
+            if not self.collision(tx, ty, x_nearest, y_nearest):
+                nearest_state_particles.add((tx, ty))
+        if len(nearest_state_particles) != 0:
+            neighbours = self.sample_neighbours(x_nearest, y_nearest)
+            for xn, yn in neighbours:
+                x_
+
 # return the neaerst node index
 # def nearest_node(x,y):
 #     temp_dist=[]
