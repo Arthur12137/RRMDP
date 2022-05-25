@@ -223,6 +223,16 @@ class RRMDP:
             except ValueError:
                 pass
             for xn, yn in mean_neighbours:
+                near_particles = state_particle_sets.setdefault((xn, yn), set())
+                for _ in range(self.extend_iters):
+                    x_new, y_new = self.steer_towards(xn, yn, x_mean, y_mean)
+                    if not self.collision(x_nearest, y_nearest, x_new, y_new):
+                        near_particles.add((x_new, y_new))
+
+            particle_set_new = set()
+            for particles in state_particle_sets.values():
+                particle_set_new.union(particles)
+            
 
 
 
