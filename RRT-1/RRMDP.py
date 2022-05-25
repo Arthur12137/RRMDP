@@ -175,11 +175,13 @@ class RRMDP:
         self.mdp.states.append((-1, -1))        # Dead state
         self.mdp.states.append((x_init, y_init))
         for _ in range(self.build_iters):
-            self.extend_mdp(x_init, y_init, self.step_size)
+            x_rand, y_rand = self.rnd_point(self.img.shape[0], self.img.shape[1])
+            self.extend_mdp(x_rand, y_rand, self.step_size)
 
 
-    def extend_mdp(self, x_init, y_init, step_size, x_rand, y_rand):
+    def extend_mdp(self, x_rand, y_rand, step_size):
         # TODO: the main extension algorithm starts here
+        x_nearest, y_nearest = self.nearest_state(x_rand, y_rand)
 # return the neaerst node index
 # def nearest_node(x,y):
 #     temp_dist=[]
