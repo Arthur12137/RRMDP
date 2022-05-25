@@ -39,11 +39,23 @@ class MarkovDecisionProcess:
 # TODO: consult the original paper about how to calculate the probability of reaching a goal
 # TODO: introduce more environment so that it may be impossible to reach a goal.
 
+
 # return dist and angle b/w new point and nearest node
 def dist_and_angle(x1,y1,x2,y2):
     dist = math.sqrt( ((x1-x2)**2)+((y1-y2)**2) )
     angle = math.atan2(y2-y1, x2-x1)
     return dist, angle
+
+
+def calculate_mean(s):
+    x_total = 0
+    y_total = 0
+    for x, y in s:
+        x_total += x
+        y_total += y
+    x_mean = x_total / len(s)
+    y_mean = y_total / len(s)
+    return int(x_mean), int(y_mean)
 
 
 class Nodes:
@@ -204,9 +216,15 @@ class RRMDP:
             if not self.collision(tx, ty, x_nearest, y_nearest):
                 nearest_state_particles.add((tx, ty))
         if len(nearest_state_particles) != 0:
-            neighbours = self.sample_neighbours(x_nearest, y_nearest)
-            for xn, yn in neighbours:
-                x_
+            x_mean, y_mean = calculate_mean(nearest_state_particles)
+            mean_neighbours = self.sample_neighbours(x_mean, y_mean)
+            try:
+                mean_neighbours.remove((x_nearest, y_nearest))
+            except ValueError:
+                pass
+            for xn, yn in mean_neighbours:
+
+
 
 # return the neaerst node index
 # def nearest_node(x,y):
