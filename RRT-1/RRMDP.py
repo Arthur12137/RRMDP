@@ -130,12 +130,46 @@ class RRMDP:
             temp_dist.append(dist)
         return temp_dist.index(min(temp_dist))
 
-    def rnd_point(h, l):
+    def rnd_point(self0,h, l):
         new_y = random.randint(0, h)
         new_x = random.randint(0, l)
-        return (new_x, new_y)
+        return new_x, new_y
+
+    def force_generation(self):
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0),
+                      (1, 1), (1, -1), (-1, 1), (-1, -1)]
+        x_magnitude = random.randint(1, 10)
+        y_magnitude = random.randint(1, 10)
+        magnitudes = (x_magnitude, y_magnitude)
+
+        direct_idx = random.randint(0, 7)
+        direction_sampled = directions[direct_idx]
+        return direction_sampled, magnitudes
+
+    def steer_towards(self, nearest_x, nearest_y, nx, ny, step_size):
+        dis, angle = dist_and_angle(nx, ny, nearest_x, nearest_y)
+        direction_sampled, magnitudes = self.force_generation()
+        x_dir, y_dir = direction_sampled
+        x_magnitude, y_magnitude = magnitudes
+
+        dis, theta = dist_and_angle(nearest_x, nearest_y, nx, ny)
+        if dis <= step_size:
+            tx = nx
+            ty = ny
+        else:
+            tx = nearest_x + step_size * math.cos(theta)
+            ty = nearest_y + step_size * math.sin(theta)
+        print("tx, ty before applying the force: ", tx, ty)
+        tx += x_dir * x_magnitude
+        ty += y_dir * y_magnitude
+        print("x_dir, y_dir: ", x_dir, y_dir)
+        print("x_magnitude, y_magnitude: ", x_magnitude, y_magnitude)
+        print("tx, ty after applying the force: ", tx, ty)
+        return tx, ty
 
 
+    def extend_mdp(self, start, end, step_size):
+        # TODO: the main extension algorithm starts here
 # return the neaerst node index
 # def nearest_node(x,y):
 #     temp_dist=[]
@@ -146,48 +180,3 @@ class RRMDP:
 
 
 # generate a random point in the image space
-def rnd_point(h,l):
-    new_y = random.randint(0, h)
-    new_x = random.randint(0, l)
-    return (new_x,new_y)
-
-
-def force_generation():
-    directions = [(0, 1), (0, -1), (1, 0), (-1, 0),
-                  (1, 1), (1, -1), (-1, 1), (-1, -1)]
-    x_magnitude = random.randint(1, 10)
-    y_magnitude = random.randint(1, 10)
-    magnitudes = (x_magnitude, y_magnitude)
-
-    direct_idx = random.randint(0, 7)
-    direction_sampled = directions[direct_idx]
-    return direction_sampled, magnitudes
-
-
-def steer_towards(nearest_x, nearest_y, nx, ny, step_size):
-    dis, angle = dist_and_angle(nx, ny, nearest_x, nearest_y)
-    direction_sampled, magnitudes = force_generation()
-    x_dir, y_dir = direction_sampled
-    x_magnitude, y_magnitude = magnitudes
-
-    dis, theta = dist_and_angle(nearest_x, nearest_y, nx, ny)
-    if dis <= step_size:
-        tx = nx
-        ty = ny
-    else:
-        tx = nearest_x + step_size * math.cos(theta)
-        ty = nearest_y + step_size * math.sin(theta)
-    print("tx, ty before applying the force: ", tx, ty)
-    tx += x_dir * x_magnitude
-    ty += y_dir * y_magnitude
-    print("x_dir, y_dir: ", x_dir, y_dir)
-    print("x_magnitude, y_magnitude: ", x_magnitude, y_magnitude)
-    print("tx, ty after applying the force: ", tx, ty)
-    return tx, ty
-
-
-def RRMDP(img, img2, start, end, stepSize):
-    h, l = img.shape
-    neighbour_radius = 65
-
-    node_list[0] = Nodes()
