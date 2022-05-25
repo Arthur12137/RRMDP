@@ -130,7 +130,7 @@ class RRMDP:
         temp_dist = []
         states = self.mdp.states
         for i in range(len(states)):
-            dist, _ = dist_and_angle(x, y, states[i].x, states[i].y)
+            dist, _ = dist_and_angle(x, y, states[i][0], states[i][1])
             temp_dist.append(dist)
         return temp_dist.index(min(temp_dist))
 
@@ -177,7 +177,6 @@ class RRMDP:
         for _ in range(self.build_iters):
             x_rand, y_rand = self.rnd_point(self.img.shape[0], self.img.shape[1])
             self.extend_mdp(x_rand, y_rand, self.step_size)
-
 
     def extend_mdp(self, x_rand, y_rand, step_size):
         # TODO: the main extension algorithm starts here
