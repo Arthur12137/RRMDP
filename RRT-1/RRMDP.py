@@ -84,14 +84,10 @@ class RRMDP:
 
     def collision(self, x1, y1, x2, y2):
         color = []
-
         try:
             x = list(np.arange(x1, x2, (x2 - x1) / 100))
 
             y = list(((y2 - y1) / (x2 - x1)) * (x - x1) + y1)
-
-            # y = list(((y2-y1)/(x2-x1))*([xx-x1 for xx in x]) + y1)
-            # print("collision",x,y)
             for i in range(len(x)):
                 # print(int(x[i]),int(y[i]))
                 color.append(self.img[int(y[i]), int(x[i])])
@@ -212,14 +208,8 @@ class RRMDP:
                         trans_action_dict[(x_mean, y_mean)] = prob
                         prob_fail -= prob
                         dist_between = distance(x, y, x_mean, y_mean)
-                        # cost_dict = self.mdp.costs.setdefault((x, y), dict())
-                        # cost_dict[action] = dist_between
-                        # cost_action_dict = cost_dict.setdefault(action, dict())
                         cost_action_dict[(x_mean, y_mean)] = dist_between
                     trans_action_dict[(-1, -1)] = prob_fail
-
-
-
 
     def k_means(self, particle_set):
         means = [self.rnd_point() for _ in range(self.num_clusters)]
