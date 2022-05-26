@@ -1,0 +1,19 @@
+# States: a list of tuples, (-1, -1) for dead-end state
+
+# Actions: a tuple of two tuples, denoting moving from one state to another
+# transition: a dictionary of...
+#   keys: a tuple denoting the current state
+#   values: a dictionary with...
+#       keys: a tuple of two tuples, denoting actions
+#       values: a dictionary with...
+#           keys: a tuple denoting the next state
+#           values: a double denoting the probability of transitioning to that state
+# Costs: A dictionary with...
+#       keys: a tuple denoting the state
+#       values: a dictionary with....
+#           keys: a tuple of two tuples denoting actions
+#           values: a dictionary with...
+#               keys: a tuple denoting the state ending up at
+#               values: a cost in the form of distance, as in the paper.
+# TODO: consult the original paper about how to calculate the probability of reaching a goal
+# TODO: introduce more environment so that it may be impossible to reach a goal.

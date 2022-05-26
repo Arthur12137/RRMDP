@@ -10,34 +10,10 @@ import cv2
 class MarkovDecisionProcess:
     """A Markov Decision Process"""
     def __init__(self):
-        self.states = []
+        self.states = set()
         self.transitions = {}
         self.costs = {}
-        self.actions = {}
-
-
-
-# States: a list of tuples, (-1, -1) for dead-end state
-
-# Actions: a tuple of two tuples, denoting moving from one state to another
-# transition: a dictionary of...
-#   keys: a tuple denoting the current state
-#   values: a dictionary with...
-#       keys: a tuple of two tuples, denoting actions
-#       values: a dictionary with...
-#           keys: a tuple denoting the next state
-#           values: a double denoting the probability of transitioning to that state
-# Costs: A dictionary with...
-#       keys: a tuple denoting the state
-#       values: a dictionary with....
-#           keys: a tuple of two tuples denoting actions
-#           values: a dictionary with...
-#               keys: a tuple denoting the state ending up at
-#               values: a tuple denoting two costs: the first is the primary objective: probability of reaching
-#                       a goal state(we want to maximize this); and the second is the secondary objective:
-#                       the cost of in the form of distance covered(we want to minimize this)
-# TODO: consult the original paper about how to calculate the probability of reaching a goal
-# TODO: introduce more environment so that it may be impossible to reach a goal.
+        self.actions = set()
 
 
 # return dist and angle b/w new point and nearest node
@@ -100,7 +76,7 @@ class RRMDP:
         self.img = img
         self.img2 = img2
         self.build_iters = 300        # value N in the paper
-        self.extend_iters = 20          # value k in the paper
+        self.num_particles_sampled = 20          # value k in the paper
         self.step_size = step_size
         self.neighbour_radiance = 20    # Used for the near function
         self.num_clusters = 4
@@ -177,8 +153,8 @@ class RRMDP:
         return rst
 
     def build_mdp(self, x_init, y_init):
-        self.mdp.states.append((-1, -1))        # Dead state
-        self.mdp.states.append((x_init, y_init))
+        self.mdp.states.add((-1, -1))        # Dead state
+        self.mdp.states.add((x_init, y_init))
         for _ in range(self.build_iters):
             x_rand, y_rand = self.rnd_point()
             self.extend_mdp(x_rand, y_rand, self.step_size)
@@ -190,7 +166,7 @@ class RRMDP:
         for x, y in self.mdp.states:
             state_particle_sets[(x, y)] = set()
         nearest_state_particles = state_particle_sets[(x_nearest, y_nearest)]
-        for _ in range(self.extend_iters):
+        for _ in range(self.num_particles_sampled):
             tx, ty = self.steer_towards(x_nearest, y_nearest, x_rand, y_rand, step_size)
             if not self.collision(tx, ty, x_nearest, y_nearest):
                 nearest_state_particles.add((tx, ty))
@@ -203,7 +179,7 @@ class RRMDP:
                 pass
             for xn, yn in mean_neighbours:
                 near_particles = state_particle_sets.setdefault((xn, yn), set())
-                for _ in range(self.extend_iters):
+                for _ in range(self.num_particles_sampled):
                     x_new, y_new = self.steer_towards(xn, yn, x_mean, y_mean)
                     if not self.collision(x_nearest, y_nearest, x_new, y_new):
                         near_particles.add((x_new, y_new))
@@ -212,7 +188,38 @@ class RRMDP:
             for particles in state_particle_sets.values():
                 particle_set_new.union(particles)
 
-            clusters = self.k_means(particle_set_new)
+            clusters, means = self.k_means(particle_set_new)
+            # means_ = set(means)
+            states_without_means = self.mdp.states
+            self.mdp.states = self.mdp.states.union(set(means))
+            for x, y in states_without_means:
+                particle_set = state_particle_sets[(x, y)]
+                if len(particle_set) > 0:
+                    prob_fail = 1
+                    action = ((x, y), (x_rand, y_rand))
+                    self.mdp.actions.add(action)
+                    trans_prob_dict = self.mdp.transitions.setdefault((x, y), dict())
+                    trans_action_dict = trans_prob_dict.setdefault(action, dict())
+                    cost_dict = self.mdp.costs.setdefault((x, y), dict())
+                    cost_action_dict = cost_dict.setdefault(action, dict())
+                    for i in range(len(means)):
+                        cluster = clusters[i]
+                        x_mean, y_mean = means[i]
+                        inter_with_particle = cluster.intersection(particle_set)
+                        num_inters = len(inter_with_particle)
+                        prob = num_inters / self.num_particles_sampled
+                        # trans_prob_dict = self.mdp.transitions.setdefault((x, y), dict())
+                        trans_action_dict[(x_mean, y_mean)] = prob
+                        prob_fail -= prob
+                        dist_between = distance(x, y, x_mean, y_mean)
+                        # cost_dict = self.mdp.costs.setdefault((x, y), dict())
+                        # cost_dict[action] = dist_between
+                        # cost_action_dict = cost_dict.setdefault(action, dict())
+                        cost_action_dict[(x_mean, y_mean)] = dist_between
+                    trans_action_dict[(-1, -1)] = prob_fail
+
+
+
 
     def k_means(self, particle_set):
         means = [self.rnd_point() for _ in range(self.num_clusters)]
@@ -229,4 +236,4 @@ class RRMDP:
                 cluster = clusters[i]
                 new_mean = calculate_mean(cluster)
                 means[i] = new_mean
-        return clusters
+        return clusters, means
