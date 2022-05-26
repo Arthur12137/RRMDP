@@ -1,5 +1,7 @@
+git add .
+echo 'Enter the commit message: '
+read commitMessage
 
-
-git add *
-git commit -m ""$@""
+git commit -m "$commitMessage"
 git push
+
