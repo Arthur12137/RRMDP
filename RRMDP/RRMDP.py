@@ -15,6 +15,41 @@ class MarkovDecisionProcess:
         self.costs = {}
         self.actions = set()
 
+    def value_iteration(self, x_goal, y_goal, goal_radiance):
+        V = {s: 100 for s in self.states}
+        goal_region_states = self._sample_states_in_goal_region(x_goal, y_goal, goal_radiance)
+        for xg, yg in goal_region_states:
+            V[(xg, yg)] = 0
+        eps = 1
+        max_residual = 100
+        while True:
+            V1 = V.copy()
+            residual = 0
+            for s in self.states:
+                transition_prob_dict = self.transitions[s]
+                actions = transition_prob_dict.keys()
+                bellman_update = min([sum([p * (self.C(s, a)[s1] + V1[s1]) for (p, s1) in self.T(s, a).items()])
+                                      for a in actions])
+                V[s] = bellman_update
+                residual = max(residual, abs(V1[s] - V[s]))
+
+            if residual < eps:
+                return V
+
+    def T(self, s, a):
+        return self.transitions[s][a]
+
+    def C(self, s, a):
+        return self.costs[s][a]
+
+    def _sample_states_in_goal_region(self, x_goal, y_goal, goal_radiance):
+        rst = []
+        for xs, ys in self.states:
+            dist = distance(xs, ys, x_goal, y_goal)
+            if dist <= goal_radiance:
+               rst.append((xs, ys))
+        return rst
+
 
 # return dist and angle b/w new point and nearest node
 def dist_and_angle(x1,y1,x2,y2):
@@ -58,6 +93,7 @@ def force_generation():
     direction_sampled = directions[direct_idx]
     return direction_sampled, magnitudes
 
+
 def nearest_mean(means, x, y):
     temp_d_min = -1
     closest_idx = -1
@@ -81,6 +117,7 @@ class RRMDP:
         self.neighbour_radiance = 20    # Used for the near function
         self.num_clusters = 4
         self.clustering_iters = 15
+        self.goal_region_radius = 15
 
     def collision(self, x1, y1, x2, y2):
         color = []
@@ -211,6 +248,10 @@ class RRMDP:
                         cost_action_dict[(x_mean, y_mean)] = dist_between
                     trans_action_dict[(-1, -1)] = prob_fail
 
+    def plan(self, x_init, y_init, x_goal, y_goal):
+        self.build_mdp(x_init, y_init)
+        self.mdp.value_iteration(x_goal, y_goal, self.goal_region_radius)
+
     def k_means(self, particle_set):
         means = [self.rnd_point() for _ in range(self.num_clusters)]
         # clusters = [set() for _ in range(self.num_clusters)]
@@ -219,7 +260,6 @@ class RRMDP:
             clusters = [set() for _ in range(self.num_clusters)]
             for xp, yp in particle_set:
                 nearest_idx = nearest_mean(means, xp, yp)
-                # clusters = [set() for _ in range(self.num_clusters)]
                 clusters[nearest_idx].add((xp, yp))
             # Update the means of each cluster
             for i in range(len(clusters)):
@@ -227,3 +267,4 @@ class RRMDP:
                 new_mean = calculate_mean(cluster)
                 means[i] = new_mean
         return clusters, means
+
