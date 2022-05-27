@@ -14,26 +14,37 @@ class MarkovDecisionProcess:
         self.transitions = {}
         self.costs = {}
         self.actions = set()
+        self.rewards = {}
 
     def value_iteration(self, x_goal, y_goal, goal_radiance):
-        V = {s: 100 for s in self.states}
+        V = {s: 100 for s in self.states}   # Denote the cost (distance)
+        V2 = {s: 0 for s in self.states}    # Denotes the probability of reaching a goal state
+
         goal_region_states = self._sample_states_in_goal_region(x_goal, y_goal, goal_radiance)
         for xg, yg in goal_region_states:
             V[(xg, yg)] = 0
+            V2[(xg, yg)] = 1
         eps = 1
+        eps2 = 0.01
         max_residual = 100
         while True:
             V1 = V.copy()
+            V21 = V2.copy()
             residual = 0
-            for s in self.states:
+            residual2 = 0
+            for s in self.states.difference(goal_region_states):
                 transition_prob_dict = self.transitions[s]
                 actions = transition_prob_dict.keys()
                 bellman_update = min([sum([p * (self.C(s, a)[s1] + V1[s1]) for (s1, p) in self.T(s, a).items()])
                                       for a in actions])
+                bellman_update2 = max([sum([p * (self.R(s, a)[s1] + V21[s1]) for (s1, p) in self.T(s, a).items()])
+                                       for a in actions])
+
                 V[s] = bellman_update
                 residual = max(residual, abs(V1[s] - V[s]))
+                residual2 = max(residual2, abs(V21[s] - V2[s]))
 
-            if residual < eps:
+            if residual < eps and residual2 < eps2:
                 return V
 
     def T(self, s, a):
@@ -42,12 +53,15 @@ class MarkovDecisionProcess:
     def C(self, s, a):
         return self.costs[s][a]
 
+    def R(self, s, a):
+        return self.rewards[s][a]
+
     def _sample_states_in_goal_region(self, x_goal, y_goal, goal_radiance):
-        rst = []
+        rst = set()
         for xs, ys in self.states:
             dist = distance(xs, ys, x_goal, y_goal)
             if dist <= goal_radiance:
-                rst.append((xs, ys))
+                rst.add((xs, ys))
         return rst
 
 
@@ -141,8 +155,8 @@ class RRMDP:
     def nearest_state(self, x, y):
         temp_dist = []
         states = self.mdp.states
-        for i in range(len(states)):
-            dist, _ = dist_and_angle(x, y, states[i][0], states[i][1])
+        for x1, y1 in states:
+            dist, _ = dist_and_angle(x, y, x1, y1)
             temp_dist.append(dist)
         return temp_dist.index(min(temp_dist))
 
@@ -185,14 +199,14 @@ class RRMDP:
                 rst.append((x, y))
         return rst
 
-    def build_mdp(self, x_init, y_init):
+    def build_mdp(self, x_init, y_init, x_goal, y_goal):
         self.mdp.states.add((-1, -1))        # Dead state
         self.mdp.states.add((x_init, y_init))
         for _ in range(self.build_iters):
             x_rand, y_rand = self.rnd_point()
             self.extend_mdp(x_rand, y_rand, self.step_size)
 
-    def extend_mdp(self, x_rand, y_rand, step_size):
+    def extend_mdp(self, x_rand, y_rand, x_goal, y_goal, step_size):
         # TODO: the main extension algorithm starts here
         x_nearest, y_nearest = self.nearest_state(x_rand, y_rand)
         state_particle_sets = dict()
@@ -235,6 +249,13 @@ class RRMDP:
                     trans_action_dict = trans_prob_dict.setdefault(action, dict())
                     cost_dict = self.mdp.costs.setdefault((x, y), dict())
                     cost_action_dict = cost_dict.setdefault(action, dict())
+
+                    # The cost dictionary for the probability
+                    reward_dict = self.mdp.rewards.setdefault((x, y), dict())
+                    reward_action_dict = reward_dict.setdefault(action, dict())
+
+                    # cost_action_dict2 = cost_dict_2.setdefault((x, y), dict())
+
                     for i in range(len(means)):
                         cluster = clusters[i]
                         x_mean, y_mean = means[i]
@@ -246,6 +267,14 @@ class RRMDP:
                         prob_fail -= prob
                         dist_between = distance(x, y, x_mean, y_mean)
                         cost_action_dict[(x_mean, y_mean)] = dist_between
+
+                        dist_to_goal = distance(x_mean, y_mean, x_goal, y_goal)
+                        if dist_to_goal <= self.goal_region_radius:
+                            reward_dict[(x_mean, y_mean)] = 1
+                        else:
+                            reward_dict[(x_mean, y_mean)] = 0
+
+                        # cost_action_dict2[(x_mean, y_mean)] = 0
                     trans_action_dict[(-1, -1)] = prob_fail
 
     def plan(self, x_init, y_init, x_goal, y_goal):
