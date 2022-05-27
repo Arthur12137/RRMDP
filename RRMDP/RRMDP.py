@@ -28,7 +28,7 @@ class MarkovDecisionProcess:
             for s in self.states:
                 transition_prob_dict = self.transitions[s]
                 actions = transition_prob_dict.keys()
-                bellman_update = min([sum([p * (self.C(s, a)[s1] + V1[s1]) for (p, s1) in self.T(s, a).items()])
+                bellman_update = min([sum([p * (self.C(s, a)[s1] + V1[s1]) for (s1, p) in self.T(s, a).items()])
                                       for a in actions])
                 V[s] = bellman_update
                 residual = max(residual, abs(V1[s] - V[s]))
@@ -47,7 +47,7 @@ class MarkovDecisionProcess:
         for xs, ys in self.states:
             dist = distance(xs, ys, x_goal, y_goal)
             if dist <= goal_radiance:
-               rst.append((xs, ys))
+                rst.append((xs, ys))
         return rst
 
 
