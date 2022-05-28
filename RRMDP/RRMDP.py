@@ -41,6 +41,7 @@ class MarkovDecisionProcess:
                                        for a in actions])
 
                 V[s] = bellman_update
+                V2[s] = bellman_update2
                 residual = max(residual, abs(V1[s] - V[s]))
                 residual2 = max(residual2, abs(V21[s] - V2[s]))
 
@@ -254,8 +255,6 @@ class RRMDP:
                     reward_dict = self.mdp.rewards.setdefault((x, y), dict())
                     reward_action_dict = reward_dict.setdefault(action, dict())
 
-                    # cost_action_dict2 = cost_dict_2.setdefault((x, y), dict())
-
                     for i in range(len(means)):
                         cluster = clusters[i]
                         x_mean, y_mean = means[i]
@@ -270,11 +269,10 @@ class RRMDP:
 
                         dist_to_goal = distance(x_mean, y_mean, x_goal, y_goal)
                         if dist_to_goal <= self.goal_region_radius:
-                            reward_dict[(x_mean, y_mean)] = 1
+                            reward_action_dict[(x_mean, y_mean)] = 1
                         else:
-                            reward_dict[(x_mean, y_mean)] = 0
+                            reward_action_dict[(x_mean, y_mean)] = 0
 
-                        # cost_action_dict2[(x_mean, y_mean)] = 0
                     trans_action_dict[(-1, -1)] = prob_fail
 
     def plan(self, x_init, y_init, x_goal, y_goal):
