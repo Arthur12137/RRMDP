@@ -46,7 +46,7 @@ class MarkovDecisionProcess:
                 residual2 = max(residual2, abs(V21[s] - V2[s]))
 
             if residual < eps and residual2 < eps2:
-                return V
+                return V, V2
 
     def T(self, s, a):
         return self.transitions[s][a]
