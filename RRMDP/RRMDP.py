@@ -88,15 +88,6 @@ def calculate_mean(s):
     return int(x_mean), int(y_mean)
 
 
-class Nodes:
-    """Class to store the RRT graph"""
-    def __init__(self, x,y):
-        self.x = x
-        self.y = y
-        self.parent_x = []
-        self.parent_y = []
-
-
 def force_generation():
     directions = [(0, 1), (0, -1), (1, 0), (-1, 0),
                   (1, 1), (1, -1), (-1, 1), (-1, -1)]
